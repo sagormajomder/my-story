@@ -57,7 +57,7 @@ export const loginUser = async (req, res, next) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       env.JWT_SECRET,
-      { expiresIn: env.JWT_EXPIRES_IN }
+      { expiresIn: env.JWT_EXPIRES_IN },
     );
 
     // Remove password from response
@@ -74,4 +74,11 @@ export const loginUser = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const logoutUser = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Logged out successfully',
+  });
 };

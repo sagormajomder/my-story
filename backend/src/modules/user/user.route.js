@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import validateRequest from '../../middlewares/validate.middleware.js';
-import { loginUser, registerUser } from './user.controller.js';
+import { loginUser, logoutUser, registerUser } from './user.controller.js';
 import { userLoginValidationSchema, userRegistrationValidationSchema } from './user.validation.js';
 
 const router = Router();
@@ -17,5 +17,6 @@ router.post(
   loginUser,
 );
 
-export const UserRoutes = router;
+router.post('/logout', logoutUser);
 
+export const UserRoutes = router;
