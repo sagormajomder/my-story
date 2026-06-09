@@ -28,6 +28,7 @@ async function fetchFromBackend(endpoint, method, body) {
     }
 
     // Immediately revalidate the caches
+    revalidatePath('/', 'layout');
     revalidatePath('/blogs', 'layout');
     revalidatePath('/dashboard', 'layout');
 

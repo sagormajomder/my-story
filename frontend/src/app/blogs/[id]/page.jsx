@@ -1,11 +1,12 @@
 import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import { notFound, redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
+import { ArrowLeft, Clock, User, Share2, MessageSquare, Tag, Calendar } from 'lucide-react';
 import { getValidPayload } from '@/lib/auth';
-import CommentSection from './components/CommentSection';
+import CommentSection from '@/components/blogs/CommentSection';
 
 // Next.js config to revalidate this page occasionally
 export const revalidate = 60;
@@ -122,12 +123,13 @@ export default async function BlogPostPage({ params }) {
 
       {/* Cover Image */}
       {post.coverImage && (
-        <div className="w-full h-auto aspect-video rounded-2xl overflow-hidden mb-12 bg-muted shadow-lg">
-          <img 
+        <div className="w-full h-auto aspect-video rounded-2xl overflow-hidden mb-12 bg-muted shadow-lg relative">
+          <Image 
             src={post.coverImage} 
             alt={post.title} 
-            className="w-full h-full object-cover"
-            onError={(e) => e.currentTarget.style.display = 'none'}
+            fill
+            sizes="(max-width: 1200px) 100vw, 1200px"
+            className="object-cover"
           />
         </div>
       )}

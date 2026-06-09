@@ -4,6 +4,7 @@ import { BookOpen } from 'lucide-react';
 import NavLinks from './NavLinks';
 import AuthButtons from './AuthButtons';
 import { getValidPayload } from '@/lib/auth';
+import { logoutAction } from '@/actions/auth';
 
 // Server Component — reads cookie server-side
 export default async function Header() {
@@ -14,6 +15,11 @@ export default async function Header() {
   if (token) {
     user = getValidPayload(token);
   }
+
+  const handleLogout = async () => {
+    'use server';
+    await logoutAction();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background border-b border-border">

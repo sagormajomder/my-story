@@ -19,6 +19,7 @@ import { useState, startTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
+import { loginAction } from '@/actions/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -37,16 +38,10 @@ export default function LoginForm() {
 
   async function onSubmit(data) {
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const res = await loginAction(data);
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        toast.error(result.message || 'Login failed. Please try again.');
+      if (!res.success) {
+        toast.error(res.message);
         return;
       }
 

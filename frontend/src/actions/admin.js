@@ -55,6 +55,7 @@ export async function deleteAnyPostAction(postId) {
   });
 
   if (res.ok) {
+    revalidatePath('/', 'layout');
     revalidatePath('/dashboard', 'layout');
     revalidatePath('/blogs', 'layout');
     return { success: true };

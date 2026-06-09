@@ -15,6 +15,8 @@ import { LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { startTransition } from 'react';
 
+import { logoutAction } from '@/actions/auth';
+
 const roleLabelMap = {
   super_admin: { label: 'Super Admin', color: 'bg-red-100 text-red-700' },
   moderator: { label: 'Moderator', color: 'bg-yellow-100 text-yellow-700' },
@@ -28,7 +30,7 @@ export default function UserMenu({ user }) {
   const initials = user?.userId?.slice(0, 2).toUpperCase() || 'U';
 
   async function handleSignOut() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await logoutAction();
     startTransition(() => {
       router.push('/');
       router.refresh();

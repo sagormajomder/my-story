@@ -11,7 +11,7 @@ import {
   deleteUserAction, 
   deleteAnyPostAction, 
   deleteAnyCommentAction 
-} from '../admin-actions';
+} from '@/actions/admin';
 
 export default function AdminManager({ initialUsers = [], initialPosts = [], initialComments = [], currentUserId, userRole }) {
   const [activeTab, setActiveTab] = useState(userRole === 'super_admin' ? 'users' : 'posts');

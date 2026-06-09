@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'react-hot-toast';
+import { registerAction } from '@/actions/auth';
 
 const registerSchema = z
   .object({
@@ -45,20 +46,14 @@ export default function RegisterForm() {
 
   async function onSubmit(data) {
     try {
-      const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-        }),
+      const res = await registerAction({
+        name: data.name,
+        email: data.email,
+        password: data.password,
       });
 
-      const result = await res.json();
-
-      if (!res.ok) {
-        toast.error(result.message || 'Registration failed. Please try again.');
+      if (!res.success) {
+        toast.error(res.message);
         return;
       }
 

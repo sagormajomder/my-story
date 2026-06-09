@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, Calendar, Clock, User } from 'lucide-react';
@@ -56,14 +57,15 @@ export default async function BlogsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post) => (
             <Link key={post._id} href={`/blogs/${post._id}`} className="group h-full">
-              <Card className="h-full border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden">
+              <Card className="h-full p-0 border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden">
                 {post.coverImage && (
-                  <div className="w-full h-48 overflow-hidden bg-muted">
-                    <img 
+                  <div className="w-full h-48 overflow-hidden bg-muted relative">
+                    <Image 
                       src={post.coverImage} 
-                      alt={post.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => e.currentTarget.style.display = 'none'}
+                      alt={post.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
                 )}

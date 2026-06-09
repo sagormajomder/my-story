@@ -4,8 +4,8 @@ import { getValidPayload } from '@/lib/auth';
 import { BookOpen, MessageSquare, PenLine, Shield, ShieldCheck, Users, User } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import PostManager from './components/PostManager';
-import AdminManager from './components/AdminManager';
+import PostManager from '@/components/dashboard/PostManager';
+import AdminManager from '@/components/dashboard/AdminManager';
 
 export const metadata = {
   title: 'Dashboard — MyStory',
