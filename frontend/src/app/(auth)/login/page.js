@@ -1,6 +1,7 @@
 import LoginForm from '@/components/auth/LoginForm';
 import Link from 'next/link';
 import { BookOpen } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
 
 export const metadata = {
   title: 'Sign In — MyStory',
@@ -10,6 +11,7 @@ export const metadata = {
 export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
+      <Toaster position="top-right" />
       {/* Background blobs */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-violet-400/15 rounded-full blur-3xl" />

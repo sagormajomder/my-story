@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Edit2, Trash2, Loader2, X, Image as ImageIcon } from 'lucide-react';
 import { createPostAction, updatePostAction, deletePostAction } from '../actions';
+import { toast } from 'react-hot-toast';
 
 export default function PostManager({ initialPosts = [] }) {
   const router = useRouter();
@@ -63,18 +64,19 @@ export default function PostManager({ initialPosts = [] }) {
       }
 
       if (res.success) {
+        toast.success(modalMode === 'create' ? 'Post created successfully!' : 'Post updated successfully!');
         closeModal();
       } else {
         if (res.errors && res.errors.length > 0) {
           const messages = res.errors.map((err) => `${err.field.replace('body.', '')}: ${err.message}`).join('\n');
-          alert(`Validation Failed:\n${messages}`);
+          toast.error(`Validation Failed:\n${messages}`);
         } else {
-          alert(res.message || 'Failed to save post');
+          toast.error(res.message || 'Failed to save post');
         }
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while saving.');
+      toast.error('An error occurred while saving.');
     } finally {
       setIsSaving(false);
     }
@@ -86,11 +88,13 @@ export default function PostManager({ initialPosts = [] }) {
     try {
       const res = await deletePostAction(id);
       if (!res.success) {
-        alert(res.message || 'Failed to delete post');
+        toast.error(res.message || 'Failed to delete post');
+      } else {
+        toast.success('Post deleted successfully');
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while deleting.');
+      toast.error('An error occurred while deleting.');
     }
   };
 

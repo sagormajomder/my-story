@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { toast } from 'react-hot-toast';
 
 const registerSchema = z
   .object({
@@ -35,7 +36,6 @@ export default function RegisterForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [serverError, setServerError] = useState('');
 
   const {
     register,
@@ -44,28 +44,28 @@ export default function RegisterForm() {
   } = useForm({ resolver: zodResolver(registerSchema) });
 
   async function onSubmit(data) {
-    setServerError('');
     try {
-      const { confirmPassword, ...payload } = data;
-
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          password: data.password,
+        }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        setServerError(
-          result.message || 'Registration failed. Please try again.',
-        );
+        toast.error(result.message || 'Registration failed. Please try again.');
         return;
       }
 
-      router.push('/login?registered=true');
+      toast.success('Registration successful! Please login.');
+      router.push('/login');
     } catch {
-      setServerError('Something went wrong. Please try again.');
+      toast.error('Something went wrong. Please try again.');
     }
   }
 
@@ -85,12 +85,6 @@ export default function RegisterForm() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className='space-y-4'>
-          {/* Server Error */}
-          {serverError && (
-            <div className='p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive'>
-              {serverError}
-            </div>
-          )}
 
           {/* Name */}
           <div className='space-y-1.5'>

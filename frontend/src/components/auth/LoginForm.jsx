@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { useState, startTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { toast } from 'react-hot-toast';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -27,7 +28,6 @@ const loginSchema = z.object({
 export default function LoginForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState('');
 
   const {
     register,
@@ -36,7 +36,6 @@ export default function LoginForm() {
   } = useForm({ resolver: zodResolver(loginSchema) });
 
   async function onSubmit(data) {
-    setServerError('');
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -47,16 +46,17 @@ export default function LoginForm() {
       const result = await res.json();
 
       if (!res.ok) {
-        setServerError(result.message || 'Login failed. Please try again.');
+        toast.error(result.message || 'Login failed. Please try again.');
         return;
       }
 
+      toast.success('Login successful!');
       startTransition(() => {
-        router.push('/');
+        router.push('/dashboard');
         router.refresh();
       });
     } catch {
-      setServerError('Something went wrong. Please try again.');
+      toast.error('Something went wrong. Please try again.');
     }
   }
 
@@ -76,12 +76,6 @@ export default function LoginForm() {
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className='space-y-4'>
-          {/* Server Error */}
-          {serverError && (
-            <div className='p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive'>
-              {serverError}
-            </div>
-          )}
 
           {/* Email */}
           <div className='space-y-1.5'>

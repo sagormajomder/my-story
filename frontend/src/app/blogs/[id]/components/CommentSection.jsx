@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Trash2, MessageSquare, User } from 'lucide-react';
 import { createCommentAction, deleteCommentAction } from '../actions';
+import { toast } from 'react-hot-toast';
 
 export default function CommentSection({ postId, postAuthorId, initialComments = [], currentUser }) {
   const [content, setContent] = useState('');
@@ -27,8 +28,9 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
       setContent('');
       // Optimistically add to top
       setComments([res.data, ...comments]);
+      toast.success('Comment posted successfully');
     } else {
-      alert(res.message);
+      toast.error(res.message);
     }
   };
 
@@ -43,7 +45,9 @@ export default function CommentSection({ postId, postAuthorId, initialComments =
     if (!res.success) {
       // Revert on failure
       setComments(previousComments);
-      alert(res.message);
+      toast.error(res.message);
+    } else {
+      toast.success('Comment deleted');
     }
   };
 

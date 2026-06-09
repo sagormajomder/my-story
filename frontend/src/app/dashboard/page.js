@@ -1,10 +1,11 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getValidPayload } from '@/lib/auth';
-import { BookOpen, MessageSquare, PenLine, Shield, Users } from 'lucide-react';
+import { BookOpen, MessageSquare, PenLine, Shield, ShieldCheck, Users, User } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import PostManager from './components/PostManager';
+import AdminManager from './components/AdminManager';
 
 export const metadata = {
   title: 'Dashboard — MyStory',
@@ -47,31 +48,80 @@ const roleConfig = {
       'Edit/delete own content',
     ],
   },
-  guest: {
-    label: 'Guest',
-    description: 'Read-only access. Can view all posts and comments.',
-    color: 'bg-gray-100 text-gray-700 border-gray-200',
-    icon: BookOpen,
-    capabilities: ['View all posts', 'View all comments'],
-  },
+  description: 'Manage your stories and comments.',
 };
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
   const token = cookieStore.get('auth_token')?.value;
 
-  if (!token) redirect('/login');
+  if (!token) {
+    redirect('/login');
+  }
 
   const payload = getValidPayload(token);
-  if (!payload) redirect('/login');
+  if (!payload) {
+    redirect('/login');
+  }
 
-  const role = payload.role || 'user';
-  const config = roleConfig[role] || roleConfig.user;
+  const role = payload.role;
+
+  const roleConfig = {
+    super_admin: {
+      label: 'Super Admin',
+      color: 'bg-red-500/10 text-red-500 border-red-500/20',
+      icon: ShieldCheck,
+      description: 'Full access to delete anything in the system.',
+      capabilities: [
+        'Create & manage posts',
+        'Delete any post or comment',
+        'Manage all users',
+        'Full system access',
+      ],
+    },
+    moderator: {
+      label: 'Moderator',
+      color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+      icon: ShieldCheck,
+      description: 'Can delete any post or comment, but cannot manage users.',
+      capabilities: [
+        'Create & manage posts',
+        'Delete any post or comment',
+        'Community moderation',
+      ],
+    },
+    user: {
+      label: 'Author',
+      color: 'bg-green-500/10 text-green-500 border-green-500/20',
+      icon: PenLine,
+      description: 'Can create posts and comments. Can only edit or delete your own content.',
+      capabilities: [
+        'Create posts',
+        'Comment on posts',
+        'Edit/delete own content',
+      ],
+    },
+    guest: {
+      label: 'Guest',
+      color: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
+      icon: User,
+      description: 'Read-only access. Can view all posts and comments.',
+      capabilities: ['View all posts', 'View all comments'],
+    },
+  };
+
+  const config = roleConfig[role] || roleConfig.guest;
   const Icon = config.icon;
 
   let totalPosts = 0;
   let totalComments = 0;
   let myPosts = [];
+  
+  // Admin Data
+  let adminUsers = [];
+  let adminPosts = [];
+  let adminComments = [];
+
   if (role !== 'guest') {
     try {
       const [postsRes, commentsRes] = await Promise.all([
@@ -94,6 +144,18 @@ export default async function DashboardPage() {
       if (commentsRes.ok) {
         const commentsData = await commentsRes.json();
         totalComments = commentsData.count || 0;
+      }
+
+      // Fetch admin data if super_admin
+      if (role === 'super_admin') {
+        const [aUsersRes, aPostsRes, aCommentsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/posts`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/comments`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+        ]);
+        if (aUsersRes.ok) adminUsers = (await aUsersRes.json()).data || [];
+        if (aPostsRes.ok) adminPosts = (await aPostsRes.json()).data || [];
+        if (aCommentsRes.ok) adminComments = (await aCommentsRes.json()).data || [];
       }
     } catch (e) {
       console.error('Failed to fetch dashboard stats:', e);
@@ -157,10 +219,21 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Role Info & Post Manager Wrapper */}
+      {/* Role Info & Management Wrappers */}
       <div className="grid grid-cols-1 gap-8">
-        {/* Only show PostManager to roles that can create posts (not guest) */}
-        {role !== 'guest' && <PostManager initialPosts={myPosts} />}
+        
+        {/* Render Admin Manager exclusively for super_admin */}
+        {role === 'super_admin' && (
+          <AdminManager 
+            initialUsers={adminUsers} 
+            initialPosts={adminPosts} 
+            initialComments={adminComments} 
+            currentUserId={payload.userId} 
+          />
+        )}
+
+        {/* PostManager for regular users and moderators */}
+        {role !== 'guest' && role !== 'super_admin' && <PostManager initialPosts={myPosts} />}
 
         <Card className='border-border shadow-sm'>
           <CardHeader className="pb-4">
