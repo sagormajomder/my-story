@@ -4,6 +4,7 @@ import { getValidPayload } from '@/lib/auth';
 import { BookOpen, MessageSquare, PenLine, Shield, Users } from 'lucide-react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import PostManager from './components/PostManager';
 
 export const metadata = {
   title: 'Dashboard — MyStory',
@@ -68,92 +69,123 @@ export default async function DashboardPage() {
   const config = roleConfig[role] || roleConfig.user;
   const Icon = config.icon;
 
+  let totalPosts = 0;
+  let totalComments = 0;
+  let myPosts = [];
+  if (role !== 'guest') {
+    try {
+      const [postsRes, commentsRes] = await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/my`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/comments/my/count`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store'
+        })
+      ]);
+
+      if (postsRes.ok) {
+        const postsData = await postsRes.json();
+        myPosts = postsData.data || [];
+        totalPosts = postsData.meta?.total || myPosts.length;
+      }
+      
+      if (commentsRes.ok) {
+        const commentsData = await commentsRes.json();
+        totalComments = commentsData.count || 0;
+      }
+    } catch (e) {
+      console.error('Failed to fetch dashboard stats:', e);
+    }
+  }
+
   const quickStats = [
     {
       label: 'Posts Written',
-      value: '0',
+      value: totalPosts.toString(),
       icon: PenLine,
       color: 'text-violet-500',
       bg: 'bg-violet-50',
     },
     {
       label: 'Comments Made',
-      value: '0',
+      value: totalComments.toString(),
       icon: MessageSquare,
       color: 'text-pink-500',
       bg: 'bg-pink-50',
-    },
-    {
-      label: 'Total Reads',
-      value: '0',
-      icon: BookOpen,
-      color: 'text-blue-500',
-      bg: 'bg-blue-50',
     },
   ];
 
   return (
     <div className='max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
       {/* Welcome Banner */}
-      <div className='relative overflow-hidden rounded-2xl bg-linear-to-r from-violet-600 via-purple-600 to-pink-600 p-8 mb-8 text-white'>
+      <div className='relative overflow-hidden rounded-2xl bg-linear-to-r from-violet-600 via-purple-600 to-pink-600 p-8 mb-8 text-white shadow-lg'>
         <div className='absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl' />
         <div className='relative'>
           <div className='flex items-center gap-3 mb-3'>
-            <div className='w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg'>
+            <div className='w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center font-bold text-lg border border-white/30'>
               {payload.userId?.slice(-2).toUpperCase() || 'U'}
             </div>
             <div>
-              <p className='text-white/70 text-sm'>Welcome back</p>
-              <h1 className='text-2xl font-bold'>My Dashboard</h1>
+              <p className='text-white/80 text-sm font-medium'>Welcome back</p>
+              <h1 className='text-3xl font-bold tracking-tight'>My Dashboard</h1>
             </div>
           </div>
-          <Badge className={`${config.color} border font-medium text-xs`}>
-            <Icon size={11} className='mr-1' />
+          <Badge className={`${config.color} border font-semibold text-xs py-1 px-3 mt-2 shadow-sm`}>
+            <Icon size={12} className='mr-1.5' />
             {config.label}
           </Badge>
         </div>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
         {quickStats.map(({ label, value, icon: StatIcon, color, bg }) => (
           <Card
             key={label}
             className='border-border hover:border-primary/30 hover:shadow-md transition-all'>
             <CardContent className='p-6 flex items-center gap-4'>
-              <div className={`${bg} ${color} p-3 rounded-xl`}>
+              <div className={`${bg} ${color} p-3 rounded-xl shadow-sm`}>
                 <StatIcon size={20} />
               </div>
               <div>
-                <p className='text-2xl font-bold'>{value}</p>
-                <p className='text-sm text-muted-foreground'>{label}</p>
+                <p className='text-3xl font-bold tracking-tight'>{value}</p>
+                <p className='text-sm font-medium text-muted-foreground'>{label}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Role Info */}
-      <Card className='border-border'>
-        <CardHeader>
-          <CardTitle className='flex items-center gap-2 text-lg'>
-            <Icon size={18} className='text-primary' />
-            Your Role & Permissions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className='text-muted-foreground text-sm mb-4'>
-            {config.description}
-          </p>
-          <ul className='space-y-2'>
-            {config.capabilities.map(cap => (
-              <li key={cap} className='flex items-center gap-2 text-sm'>
-                <span className='w-1.5 h-1.5 rounded-full bg-primary shrink-0' />
-                {cap}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      {/* Role Info & Post Manager Wrapper */}
+      <div className="grid grid-cols-1 gap-8">
+        {/* Only show PostManager to roles that can create posts (not guest) */}
+        {role !== 'guest' && <PostManager initialPosts={myPosts} />}
+
+        <Card className='border-border shadow-sm'>
+          <CardHeader className="pb-4">
+            <CardTitle className='flex items-center gap-2 text-lg'>
+              <Icon size={18} className='text-primary' />
+              Your Role & Permissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className='text-muted-foreground text-sm mb-5 font-medium'>
+              {config.description}
+            </p>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+              {config.capabilities.map(cap => (
+                <div key={cap} className='flex items-center gap-2.5 text-sm p-2 rounded-lg bg-muted/40'>
+                  <div className='w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0'>
+                    <span className='w-1.5 h-1.5 rounded-full bg-primary' />
+                  </div>
+                  <span className="font-medium">{cap}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

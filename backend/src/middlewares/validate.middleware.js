@@ -2,13 +2,6 @@ import { ZodError } from 'zod';
 import { HTTP_STATUS } from '../shared/constants.js';
 import ApiError from '../utils/ApiError.js';
 
-/**
- * Express middleware that validates req.body, req.query, and req.params
- * against a Zod schema shaped as: z.object({ body?, query?, params? })
- *
- * @param {import('zod').ZodSchema} schema - Zod schema to validate against
- * @returns {import('express').RequestHandler}
- */
 const validate = schema => (req, _res, next) => {
   try {
     const parsed = schema.parse({
