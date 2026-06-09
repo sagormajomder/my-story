@@ -13,8 +13,8 @@ import {
   deleteAnyCommentAction 
 } from '../admin-actions';
 
-export default function AdminManager({ initialUsers = [], initialPosts = [], initialComments = [], currentUserId }) {
-  const [activeTab, setActiveTab] = useState('users');
+export default function AdminManager({ initialUsers = [], initialPosts = [], initialComments = [], currentUserId, userRole }) {
+  const [activeTab, setActiveTab] = useState(userRole === 'super_admin' ? 'users' : 'posts');
   
   // Local state for optimistic UI updates
   const [users, setUsers] = useState(initialUsers);
@@ -93,13 +93,15 @@ export default function AdminManager({ initialUsers = [], initialPosts = [], ini
   return (
     <div className="mt-8">
       <div className="flex gap-2 mb-6 bg-muted/30 p-1.5 rounded-xl overflow-x-auto">
-        <Button 
-          variant={activeTab === 'users' ? 'default' : 'ghost'} 
-          onClick={() => setActiveTab('users')}
-          className="gap-2 flex-1 min-w-[120px]"
-        >
-          <Users size={16} /> Manage Users
-        </Button>
+        {userRole === 'super_admin' && (
+          <Button 
+            variant={activeTab === 'users' ? 'default' : 'ghost'} 
+            onClick={() => setActiveTab('users')}
+            className="gap-2 flex-1 min-w-[120px]"
+          >
+            <Users size={16} /> Manage Users
+          </Button>
+        )}
         <Button 
           variant={activeTab === 'posts' ? 'default' : 'ghost'} 
           onClick={() => setActiveTab('posts')}

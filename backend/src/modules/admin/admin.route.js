@@ -11,14 +11,16 @@ import {
 
 const router = Router();
 
-// Secure all admin routes
-router.use(authenticate, authorize('super_admin'));
+// Authentication for all routes below
+router.use(authenticate);
 
-router.get('/users', getAllUsers);
-router.patch('/users/:id/role', changeUserRole);
-router.delete('/users/:id', deleteUser);
+// Super Admin only routes
+router.get('/users', authorize('super_admin'), getAllUsers);
+router.patch('/users/:id/role', authorize('super_admin'), changeUserRole);
+router.delete('/users/:id', authorize('super_admin'), deleteUser);
 
-router.get('/posts', getAllPostsAdmin);
-router.get('/comments', getAllCommentsAdmin);
+// Super Admin and Moderator routes
+router.get('/posts', authorize('super_admin', 'moderator'), getAllPostsAdmin);
+router.get('/comments', authorize('super_admin', 'moderator'), getAllCommentsAdmin);
 
 export const AdminRoutes = router;

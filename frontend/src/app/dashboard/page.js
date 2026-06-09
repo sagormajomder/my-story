@@ -146,16 +146,31 @@ export default async function DashboardPage() {
         totalComments = commentsData.count || 0;
       }
 
-      // Fetch admin data if super_admin
-      if (role === 'super_admin') {
-        const [aUsersRes, aPostsRes, aCommentsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/posts`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }),
+      // Fetch admin data if super_admin or moderator
+      if (role === 'super_admin' || role === 'moderator') {
+        const adminPromises = [];
+        
+        if (role === 'super_admin') {
+          adminPromises.push(
+            fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/users`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+              .then(res => res.ok ? res.json() : { data: [] })
+              .then(data => { adminUsers = data.data || []; })
+          );
+        }
+
+        adminPromises.push(
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/posts`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+            .then(res => res.ok ? res.json() : { data: [] })
+            .then(data => { adminPosts = data.data || []; })
+        );
+
+        adminPromises.push(
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/comments`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
-        ]);
-        if (aUsersRes.ok) adminUsers = (await aUsersRes.json()).data || [];
-        if (aPostsRes.ok) adminPosts = (await aPostsRes.json()).data || [];
-        if (aCommentsRes.ok) adminComments = (await aCommentsRes.json()).data || [];
+            .then(res => res.ok ? res.json() : { data: [] })
+            .then(data => { adminComments = data.data || []; })
+        );
+
+        await Promise.all(adminPromises);
       }
     } catch (e) {
       console.error('Failed to fetch dashboard stats:', e);
@@ -222,18 +237,19 @@ export default async function DashboardPage() {
       {/* Role Info & Management Wrappers */}
       <div className="grid grid-cols-1 gap-8">
         
-        {/* Render Admin Manager exclusively for super_admin */}
-        {role === 'super_admin' && (
+        {/* Render Admin Manager exclusively for super_admin and moderator */}
+        {(role === 'super_admin' || role === 'moderator') && (
           <AdminManager 
             initialUsers={adminUsers} 
             initialPosts={adminPosts} 
             initialComments={adminComments} 
             currentUserId={payload.userId} 
+            userRole={role}
           />
         )}
 
-        {/* PostManager for regular users and moderators */}
-        {role !== 'guest' && role !== 'super_admin' && <PostManager initialPosts={myPosts} />}
+        {/* PostManager for regular users */}
+        {role === 'user' && <PostManager initialPosts={myPosts} />}
 
         <Card className='border-border shadow-sm'>
           <CardHeader className="pb-4">
